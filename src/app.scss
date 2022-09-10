@@ -1,0 +1,42 @@
+@import "open-props/style";
+@import "open-props/normalize";
+@import "open-props/buttons";
+
+:root {
+	--brand: var(--red-3);
+	--link: var(--red-3);
+	--scrollthumb-color: var(--red-2);
+}
+
+* {
+	scrollbar-width: thin;
+	scroll-behavior: smooth;
+
+	&::-webkit-scrollbar {
+		width: 10px;
+	}
+	
+	&::-webkit-scrollbar-track {
+		background: var(--surface-2);
+		border-radius: 10px;
+	}
+	
+	&::-webkit-scrollbar-thumb {
+		background: var(--surface-2);
+		border-radius: 10px;
+	}
+	
+	&::-webkit-scrollbar-thumb:hover {
+		background: rgb(100, 100, 100);
+		border-radius: 10px;
+	}
+	
+	&::-webkit-scrollbar-thumb:active {
+		background: rgb(68, 68, 68);
+		border-radius: 10px;
+	}
+}
+
+body {
+	padding: var(--size-6);
+}
