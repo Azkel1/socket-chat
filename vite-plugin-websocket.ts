@@ -14,7 +14,7 @@ export default function websocketServer(): PluginOption {
 				>(server.httpServer, {
 					cors: {
 						origin(requestOrigin, callback) {
-							console.log(`New client connected from '${requestOrigin}'`);
+							console.log(`New client trying to connect from '${requestOrigin}'`);
 							callback(null, requestOrigin);
 						}
 					}
@@ -43,7 +43,7 @@ export default function websocketServer(): PluginOption {
 					});
 				});
 
-				console.log('Socket.io injected!');
+				console.log('Websocket initialized!');
 			}
 		}
 	};

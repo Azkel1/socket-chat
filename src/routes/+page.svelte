@@ -4,31 +4,22 @@
 
 	import dayjs from 'dayjs';
 
-	import { socket, sendMessage } from '$lib/websocket';
 	import { debounce } from '$lib/helpers';
+	import { sendMessage, socket, userID } from '$lib/websocket';
 
-	let userID: number | undefined;
 	let input: HTMLInputElement;
 	let messageContainer: HTMLElement;
 	let isMessageContainerScrolled = false;
-	let messages: WebSocket.ServerMessage[] = [];
+	let messageList: WebSocket.ServerMessage[] = [];
 
 	onMount(() => {
-		socket.on('welcome', (welcome) => {
-			userID = welcome.userID;
-			console.log('WebSocket client: Welcome received', welcome);
-		});
+		input.value = '';
 
-		socket.on('message', async (data) => {
-			messages = [...messages, data];
-			await tick();
-			messageContainer.scrollTo(0, messageContainer.scrollHeight);
-			console.log('WebSocket client: Message received', data);
-		});
-
+		socket.on('message', handleMessage);
 		messageContainer.addEventListener('scroll', debounce(messageContainerScrollHandler));
 
 		return () => {
+			socket.off('message', handleMessage);
 			messageContainer.removeEventListener('scroll', messageContainerScrollHandler);
 		};
 	});
@@ -46,11 +37,20 @@
 		input.value = '';
 		input.focus();
 	}
+
+	async function handleMessage(message: WebSocket.ServerMessage) {
+		// Append the newly received message to the message list
+		messageList = [...messageList, message];
+
+		// Wait for the message list container to update and scroll to the bottom
+		await tick();
+		messageContainer.scrollTo(0, messageContainer.scrollHeight);
+	}
 </script>
 
 <header id="header">
 	<h2>Chat app</h2>
-	<h5>#{userID ?? 'connecting ...'}</h5>
+	<h5>#{$userID ?? 'connecting ...'}</h5>
 </header>
 
 <main id="main">
@@ -68,17 +68,17 @@
 	</header>
 
 	<main bind:this={messageContainer}>
-		{#if messages.length === 0}
+		{#if messageList.length === 0}
 			<h5 style="justify-self: center; padding-block: var(--size-5); color: var(--surface-4);">
 				Write something!
 			</h5>
 		{/if}
 
-		{#each messages as message (message.messageID)}
-			<span class="message" class:self={message.from === userID}>
-				{message.message}
-				<small>{dayjs(message.time).format('HH:mm')}</small></span
-			>
+		{#each messageList as message (message.messageID)}
+			<span class="message" class:self={message.from === $userID}>
+				<p>{message.message}</p>
+				<small>{dayjs(message.time).format('HH:mm')}</small>
+			</span>
 		{/each}
 	</main>
 </main>
@@ -111,6 +111,7 @@
 
 		display: flex;
 		flex-direction: column;
+		flex-grow: 1;
 		overflow: hidden;
 		z-index: 1;
 
@@ -143,7 +144,8 @@
 				background-color: var(--surface-1);
 				border-radius: var(--radius-2);
 				box-shadow: var(--shadow-2);
-				color: var(--gray-1);
+
+				display: inline-grid;
 
 				padding: var(--size-2) var(--size-3);
 				word-break: break-all;
@@ -152,14 +154,21 @@
 
 				&.self {
 					background-color: var(--brand);
-					color: var(--surface-1);
+					color: var(--gray-8);
 					justify-self: end;
 				}
 
+				> p {
+					font-size: var(--font-size-1);
+					max-inline-size: unset;
+				}
+
 				> small {
-					color: var(--surface-3);
+					color: var(--gray-7);
 					font-size: 0.55rem;
 					font-weight: var(--font-weight-7);
+
+					justify-self: end;
 				}
 			}
 		}

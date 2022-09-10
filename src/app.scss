@@ -40,3 +40,7 @@
 body {
 	padding: var(--size-6);
 }
+
+:where(:not(:active):focus-visible) {
+	outline-offset: 0;
+}
