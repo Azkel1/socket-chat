@@ -1,5 +1,5 @@
 {
-	"name": "svelte-chat",
+	"name": "socket-chat",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
