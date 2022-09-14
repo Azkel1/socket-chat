@@ -8,7 +8,15 @@
 	--scrollthumb-color: var(--red-2);
 }
 
-* {
+@media (prefers-color-scheme: light) {
+	:root {
+		--brand: var(--red-5);
+		--link: var(--red-5);
+		--scrollthumb-color: var(--red-4);
+	}
+}
+
+:where(*) {
 	scrollbar-width: thin;
 	scroll-behavior: smooth;
 
@@ -37,10 +45,43 @@
 	}
 }
 
-body {
+:where(body) {
 	padding: var(--size-6);
+}
+
+:where(ul) {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+:where(li) {
+	padding: 0;
+}
+
+:where(svg) {
+	max-block-size: 100%;
+	inline-size: revert;
 }
 
 :where(:not(:active):focus-visible) {
 	outline-offset: 0;
+}
+
+.icon-button {
+	background-color: transparent;
+	border: 0;
+	box-shadow: none;
+	font-size: 1.5em;
+
+	padding: 0;
+	transition: 300ms;
+
+	&:is(:focus, :hover) {
+		transform: scale(1.1) rotate(90deg);
+	}
+
+	&:active {
+		transform: scale(0.9) rotate(90deg);
+	}
 }

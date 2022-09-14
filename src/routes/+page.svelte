@@ -1,11 +1,15 @@
+<!-- ---------------------------------------------------------- JS/TS ---------------------------------------------------------- -->
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
-
 	import dayjs from 'dayjs';
 
-	import { debounce } from '$lib/helpers';
-	import { sendMessage, socket, userID } from '$lib/websocket';
+	import { debounce } from '$lib/utils/helpers';
+	import { sendMessage, socket, userID, currentChannel } from '$lib/utils/websocket';
+	import { ArrowDownIcon } from '@rgossiaux/svelte-heroicons/solid';
+	import type { PageData } from './$types';
+
+	export let data: PageData;
 
 	let input: HTMLInputElement;
 	let messageContainer: HTMLElement;
@@ -13,12 +17,17 @@
 	let messageList: WebSocket.ServerMessage[] = [];
 
 	onMount(() => {
+		console.log(data);
+
 		input.value = '';
 
 		socket.on('message', handleMessage);
 		messageContainer.addEventListener('scroll', debounce(messageContainerScrollHandler));
 
 		return () => {
+			socket.disconnect();
+
+			// Remove event listeners
 			socket.off('message', handleMessage);
 			messageContainer.removeEventListener('scroll', messageContainerScrollHandler);
 		};
@@ -48,22 +57,22 @@
 	}
 </script>
 
-<header id="header">
-	<h2>Chat app</h2>
-	<h5>#{$userID ?? 'connecting ...'}</h5>
-</header>
-
+<!-- ----------------------------------------------------------- HTML ---------------------------------------------------------- -->
 <main id="main">
 	<header>
 		<h5>Messages</h5>
+
 		{#if isMessageContainerScrolled}
 			<button
 				id="previous"
 				transition:fly={{ y: -20 }}
 				on:click={() => {
 					messageContainer?.scrollTo(0, messageContainer.scrollHeight);
-				}}>New messages</button
+				}}
 			>
+				New messages
+				<ArrowDownIcon />
+			</button>
 		{/if}
 	</header>
 
@@ -85,11 +94,17 @@
 
 <footer id="footer">
 	<form on:submit|preventDefault={handleSubmit}>
-		<input bind:this={input} />
+		<input
+			bind:this={input}
+			placeholder={$currentChannel
+				? `Send message to #${$currentChannel.name}`
+				: 'Choose a channel to send a message to'}
+		/>
 		<button>Send message</button>
 	</form>
 </footer>
 
+<!-- ----------------------------------------------------------- CSS ----------------------------------------------------------- -->
 <style lang="scss">
 	:global(body) {
 		display: flex;
@@ -98,16 +113,10 @@
 		max-height: 100vh;
 	}
 
-	#header {
-		display: flex;
-		gap: var(--size-3);
-		align-items: baseline;
-		justify-content: space-between;
-	}
-
 	#main {
 		background-color: var(--surface-2);
 		border-radius: var(--radius-2);
+		box-shadow: var(--shadow-2);
 
 		display: flex;
 		flex-direction: column;
@@ -139,6 +148,8 @@
 
 			padding: var(--size-4);
 			overflow: hidden auto;
+			scroll-snap-type: y mandatory;
+			scroll-padding: var(--size-2);
 
 			.message {
 				background-color: var(--surface-1);
@@ -147,10 +158,11 @@
 
 				display: inline-grid;
 
-				padding: var(--size-2) var(--size-3);
-				word-break: break-all;
 				max-width: 90%;
 				width: fit-content;
+				padding: var(--size-2) var(--size-3);
+				scroll-snap-align: end;
+				word-break: break-all;
 
 				&.self {
 					background-color: var(--brand);
@@ -180,6 +192,8 @@
 			gap: var(--size-4);
 
 			> input {
+				box-shadow: var(--shadow-2);
+
 				flex-grow: 1;
 				padding-inline: var(--size-3);
 			}
